@@ -47,7 +47,7 @@
 				url: ajax_object.ajax_url,
 				type: 'POST',
 				data: {
-					action: 'cub_cf7db_cf7form_single_datalist',
+					action: 'cubcf7db_cf7form_single_datalist',
 					id: selectedId // Pass selected ID.
 				},
 				success: function (response) {
@@ -209,7 +209,7 @@
 			url: ajax_object.ajax_url,
 			type: 'POST',
 			data: {
-				action: 'cub_cf7db_delete_record', // Define your server-side delete action.
+				action: 'cubcf7db_delete_record', // Define your server-side delete action.
 				form_id: formId
 			},
 			success: function (response) {

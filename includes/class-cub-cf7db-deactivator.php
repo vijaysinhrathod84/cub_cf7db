@@ -17,8 +17,9 @@
  * @since      1.0.0
  * @package    Cub_cf7db
  * @subpackage Cub_cf7db/includes
- * @author     cubsys <contact.cubsys@gmail.com>
+ * @author     cubsys <contact@cubsys.com>
  */
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
 class Cub_Cf7db_Deactivator {
 
 	/**

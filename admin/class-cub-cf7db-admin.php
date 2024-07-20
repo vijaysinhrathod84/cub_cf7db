@@ -17,8 +17,9 @@
  *
  * @package    Cub_cf7db
  * @subpackage Cub_cf7db/admin
- * @author     cubsys <contact.cubsys@gmail.com>
+ * @author     cubsys <contact@cubsys.com>
  */
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
 class Cub_Cf7db_Admin {
 
 	/**
@@ -129,7 +130,7 @@ class Cub_Cf7db_Admin {
 	 * @since 1.0.0
 	 * @param array $form_tag get a form data.
 	 */
-	public function cub_cf7db_before_send_mail( $form_tag ) {
+	public function cubcf7db_before_send_mail( $form_tag ) {
 		global $wpdb, $wp_filesystem;
 
 		$cfdb              = apply_filters( 'cub_cf7db_database', $wpdb );
@@ -302,13 +303,13 @@ class Cub_Cf7db_Admin {
      *
      * @since 1.0.0
      */
-    public function cub_cf7db_add_menu_page() {
+    public function cubcf7db_add_menu_page() {
         add_menu_page(
             __( 'CF7DB', 'cub-cf7db' ),
             __( 'CF7DB', 'cub-cf7db' ),
             'manage_options',
             'cub_cf7db-page',
-            array( $this, 'cub_cf7db_menu_callback' ),
+            array( $this, 'cubcf7db_menu_callback' ),
             'dashicons-feedback',
             30
         );
@@ -320,7 +321,7 @@ class Cub_Cf7db_Admin {
      *
      * @since 1.0.0
      */
-    public function cub_cf7db_menu_callback() {
+    public function cubcf7db_menu_callback() {
         if ( current_user_can( 'manage_options' ) ) {
             include_once 'partials/cub-cf7db-display.php';
         }
@@ -332,7 +333,7 @@ class Cub_Cf7db_Admin {
 	 * @since 1.0.0
 	 * @return array|null List of CF7 forms or null if user doesn't have permissions.
 	 */
-	public function cub_cf7db_cf7form_list() {
+	public function cubcf7db_cf7form_list() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return null;
 		}
@@ -354,7 +355,7 @@ class Cub_Cf7db_Admin {
 	 *
 	 * @since 1.0.0
 	 */
-	public function cub_cf7db_cf7form_single_datalist() {
+	public function cubcf7db_cf7form_single_datalist() {
 		if ( isset( $_POST['id'] ) ) {
 			global $wpdb;
 			$cfdb       = apply_filters( 'cub_cf7db_database', $wpdb );
@@ -381,7 +382,7 @@ class Cub_Cf7db_Admin {
 									if ( ! in_array( $key, $columns, true ) ) {
 										$columns[] = $key; // Add the column to $columns array if it's not already present.
 
-										$column_titles[ $key ] = self::cub_cf7db_generate_user_friendly_column_title( $key );
+										$column_titles[ $key ] = self::cubcf7db_generate_user_friendly_column_title( $key );
 									}
 								}
 							}
@@ -435,7 +436,7 @@ class Cub_Cf7db_Admin {
 	 * @param int $id The ID of the form record to retrieve.
 	 * @return object|null The form record object or null if not found or unauthorized.
 	 */
-	public function cub_cf7db_cf7form_single_recorddetail( $id ) {
+	public function cubcf7db_cf7form_single_recorddetail( $id ) {
 		// Check if the current user has the necessary capability.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return null; // Return null if user is not authorized.
@@ -466,7 +467,7 @@ class Cub_Cf7db_Admin {
 	 * @param string $key The original column key.
 	 * @return string The user-friendly column title.
 	 */
-	public function cub_cf7db_generate_user_friendly_column_title( $key ) {
+	public function cubcf7db_generate_user_friendly_column_title( $key ) {
 
 		// Remove specific substrings.
 		$key_val = str_replace( array( 'your-', 'cfdb7_file' ), '', $key );
@@ -491,7 +492,7 @@ class Cub_Cf7db_Admin {
 	 *
 	 * @since 1.0.0
 	 */
-	public function cub_cf7db_delete_record() {
+	public function cubcf7db_delete_record() {
 		// Check if the user has sufficient permissions.
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => 'You do not have sufficient permissions to delete this record.' ) );

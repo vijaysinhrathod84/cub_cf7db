@@ -24,6 +24,7 @@
  * @package    Cub_cf7db
  */
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
 // If uninstall not called from WordPress, then exit.
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
@@ -32,7 +33,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 /**
  * Delete plugin options and custom tables.
  */
-function cub_cf7db_delete_plugin_data() {
+function cubcf7db_delete_plugin_data() {
 	global $wpdb;
 
 	// Delete plugin options.
@@ -55,4 +56,4 @@ function cub_cf7db_delete_plugin_data() {
 }
 
 // Execute the function to delete plugin data.
-// cub_cf7db_delete_plugin_data();.
+// cubcf7db_delete_plugin_data();.

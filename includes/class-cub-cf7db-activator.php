@@ -18,6 +18,7 @@
  * @package    Cub_cf7db
  * @subpackage Cub_cf7db/includes
  */
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
 class Cub_Cf7db_Activator {
 
 	/**
@@ -48,11 +49,11 @@ class Cub_Cf7db_Activator {
 			}
 			foreach ( $blog_ids as $blog_id ) {
 				switch_to_blog( $blog_id );
-				self::cub_cf7db_create_table();
+				self::cubcf7db_create_table();
 				restore_current_blog();
 			}
 		} else {
-			self::cub_cf7db_create_table();
+			self::cubcf7db_create_table();
 		}
 		// Add custom capability.
 		$role = get_role( 'administrator' );
@@ -70,7 +71,7 @@ class Cub_Cf7db_Activator {
 		add_action(
 			'admin_notices',
 			function () {
-				echo '<div class="error"><p>' . esc_html__( 'Cub_cf7db requires Contact Form 7 to be installed and active.', 'cub_cf7db' ) . '</p></div>';
+				echo '<div class="error"><p>' . esc_html__( 'Cub_cf7db requires Contact Form 7 to be installed and active.', 'cub-cf7db' ) . '</p></div>';
 			}
 		);
 	}
@@ -80,7 +81,7 @@ class Cub_Cf7db_Activator {
 	 *
 	 * @since 1.0.0
 	 */
-	private static function cub_cf7db_create_table() {
+	private static function cubcf7db_create_table() {
 		global $wpdb, $wp_filesystem;
 
 		$table_name     = $wpdb->prefix . 'cub_cf7db_forms';

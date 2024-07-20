@@ -1,10 +1,10 @@
-=== CUB - CF7DB ===
-Contributors: vijaysinhrathod84
+=== CUB-CF7DB ===
+Contributors: vijaysinhrathod84, cubsys
 Donate link: https://rzp.io/l/WVmYWWWx
 Tags: contact form 7, form submissions, data export, form data management, CF7 extension,
 Requires at least: 5.0
-Tested up to: 6.5.4
-Stable tag: 1.0.0
+Tested up to: 6.6
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -82,4 +82,4 @@ If you need customization for this plugin or if you want to develop a new plugin
 
 **Contact Information:**
 - **Website:** [https://www.cubsys.com](https://www.cubsys.com)
-- **Email:** [contact.cubsys@gmail.com](mailto:contact.cubsys@gmail.com)
+- **Email:** [contact@cubsys.com](mailto:contact@cubsys.com)

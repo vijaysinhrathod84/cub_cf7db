@@ -12,10 +12,7 @@
  * @subpackage Cub_cf7db/includes
  */
 
-// Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
 
 /**
  * The core plugin class.
@@ -29,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since      1.0.0
  * @package    Cub_cf7db
  * @subpackage Cub_cf7db/includes
- * @author     cubsys <contact.cubsys@gmail.com>
+ * @author     cubsys <contact@cubsys.com>
  */
 class Cub_Cf7db {
 
@@ -129,12 +126,12 @@ class Cub_Cf7db {
 	private function define_admin_hooks() {
 		$plugin_admin = new Cub_Cf7db_Admin( $this->get_plugin_name(), $this->get_version() );
 
-		$this->loader->add_action( 'wp_ajax_cub_cf7db_delete_record', $plugin_admin, 'cub_cf7db_delete_record' );
-		$this->loader->add_action( 'wp_ajax_nopriv_cub_cf7db_delete_record', $plugin_admin, 'cub_cf7db_delete_record' );
-		$this->loader->add_action( 'wp_ajax_cub_cf7db_cf7form_single_datalist', $plugin_admin, 'cub_cf7db_cf7form_single_datalist' );
-		$this->loader->add_action( 'wp_ajax_nopriv_cub_cf7db_cf7form_single_datalist', $plugin_admin, 'cub_cf7db_cf7form_single_datalist' );
-		$this->loader->add_action( 'admin_menu', $plugin_admin, 'cub_cf7db_add_menu_page' );
-		$this->loader->add_action( 'wpcf7_before_send_mail', $plugin_admin, 'cub_cf7db_before_send_mail' );
+		$this->loader->add_action( 'wp_ajax_cubcf7db_delete_record', $plugin_admin, 'cubcf7db_delete_record' );
+		$this->loader->add_action( 'wp_ajax_nopriv_cubcf7db_delete_record', $plugin_admin, 'cubcf7db_delete_record' );
+		$this->loader->add_action( 'wp_ajax_cubcf7db_cf7form_single_datalist', $plugin_admin, 'cubcf7db_cf7form_single_datalist' );
+		$this->loader->add_action( 'wp_ajax_nopriv_cubcf7db_cf7form_single_datalist', $plugin_admin, 'cubcf7db_cf7form_single_datalist' );
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'cubcf7db_add_menu_page' );
+		$this->loader->add_action( 'wpcf7_before_send_mail', $plugin_admin, 'cubcf7db_before_send_mail' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 	}

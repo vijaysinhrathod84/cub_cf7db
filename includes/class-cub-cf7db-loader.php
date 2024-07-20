@@ -9,10 +9,7 @@
  * @subpackage Cub_cf7db/includes
  */
 
-// Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
 
 /**
  * Register all actions and filters for the plugin.
@@ -24,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since      1.0.0
  * @package    Cub_cf7db
  * @subpackage Cub_cf7db/includes
- * @author     cubsys <contact.cubsys@gmail.com>
+ * @author     cubsys <contact@cubsys.com>
  */
 class Cub_Cf7db_Loader {
 

@@ -14,25 +14,21 @@
  * Plugin Name:       CUB - CF7DB
  * Plugin URI:        https://www.cubsys.com
  * Description:       CUB - CF7DB is a powerful addon for Contact Form 7 that allows you to save all submitted form data directly to your WordPress database. This plugin provides an easy-to-use interface within the WordPress admin area to view, search, and export form entries, making it a valuable tool for managing and analyzing your form data.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            cubsys
  * Author URI:        https://www.cubsys.com/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       cub_cf7db
+ * Text Domain:       cub-cf7db
  * Domain Path:       /languages
  */
 
-// If this file is called directly, abort.
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
-
+ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
 /**
  * Currently plugin version.
  * Start at version 1.0.0 and use SemVer - https://semver.org
  */
-define( 'CUB_CF7DB_VERSION', '1.0.0' );
+define( 'CUB_CF7DB_VERSION', '1.0.1' );
 
 // Define plugin basename.
 define( 'CUB_CF7DB_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -49,7 +45,7 @@ define( 'CUB_CF7DB_PLUGIN_URL', untrailingslashit( plugins_url( '', __FILE__ ) )
  *
  * @param bool $network_wide Whether the plugin is being activated network-wide.
  */
-function activate_cub_cf7db( $network_wide ) {
+function activate_cubcf7db( $network_wide ) {
 	require_once CUB_CF7DB_PLUGIN_DIR . '/includes/class-cub-cf7db-activator.php';
 	Cub_Cf7db_Activator::activate( $network_wide );
 }
@@ -58,13 +54,13 @@ function activate_cub_cf7db( $network_wide ) {
  * The code that runs during plugin deactivation.
  * This action is documented in includes/class-cub-cf7db-deactivator.php
  */
-function deactivate_cub_cf7db() {
+function deactivate_cubcf7db() {
 	require_once CUB_CF7DB_PLUGIN_DIR . '/includes/class-cub-cf7db-deactivator.php';
 	Cub_Cf7db_Deactivator::deactivate();
 }
 
-register_activation_hook( __FILE__, 'activate_cub_cf7db' );
-register_deactivation_hook( __FILE__, 'deactivate_cub_cf7db' );
+register_activation_hook( __FILE__, 'activate_cubcf7db' );
+register_deactivation_hook( __FILE__, 'deactivate_cubcf7db' );
 
 /**
  * The core plugin class that is used to define internationalization,
@@ -78,7 +74,7 @@ require_once CUB_CF7DB_PLUGIN_DIR . '/includes/class-cub-cf7db.php';
  * @param WP_Upgrader $upgrader_object Upgrader instance.
  * @param array       $options Array of bulk item update data.
  */
-function cub_cf7db_upgrade_function( $upgrader_object, $options ) {
+function cubcf7db_upgrade_function( $upgrader_object, $options ) {
     global $wp_filesystem;
 
     // Initialize the WP_Filesystem.
@@ -104,7 +100,7 @@ function cub_cf7db_upgrade_function( $upgrader_object, $options ) {
     }
 }
 
-add_action( 'upgrader_process_complete', 'cub_cf7db_upgrade_function', 10, 2 );
+add_action( 'upgrader_process_complete', 'cubcf7db_upgrade_function', 10, 2 );
 
 /**
  * Begins execution of the plugin.
@@ -115,8 +111,8 @@ add_action( 'upgrader_process_complete', 'cub_cf7db_upgrade_function', 10, 2 );
  *
  * @since    1.0.0
  */
-function run_cub_cf7db() {
+function run_cubcf7db() {
 	$plugin = new Cub_Cf7db();
 	$plugin->run();
 }
-run_cub_cf7db();
+run_cubcf7db();

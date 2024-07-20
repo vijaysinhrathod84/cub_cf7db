@@ -9,8 +9,7 @@
  * @subpackage Cub_cf7db/public
  */
 
-// Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) { exit; }
+ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
 
 /**
  * The public-facing functionality of the plugin.
@@ -20,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  *
  * @package    Cub_cf7db
  * @subpackage Cub_cf7db/public
- * @author     cubsys <contact.cubsys@gmail.com>
+ * @author     cubsys <contact@cubsys.com>
  */
 class Cub_Cf7db_Public {
 
