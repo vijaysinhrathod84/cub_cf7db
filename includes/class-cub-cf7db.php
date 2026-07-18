@@ -12,7 +12,9 @@
  * @subpackage Cub_cf7db/includes
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 /**
  * The core plugin class.
@@ -68,7 +70,7 @@ class Cub_Cf7db {
 	 * @since    1.0.0
 	 */
 	public function __construct() {
-		// Fix #18: CUB_CF7DB_VERSION is always defined before this class loads — simplified.
+		// CUB_CF7DB_VERSION is always defined before this class loads.
 		$this->version     = CUB_CF7DB_VERSION;
 		$this->plugin_name = 'cub_cf7db';
 
@@ -113,7 +115,7 @@ class Cub_Cf7db {
 	private function define_admin_hooks() {
 		$plugin_admin = new Cub_Cf7db_Admin( $this->get_plugin_name(), $this->get_version() );
 
-		// Fix #2: Removed wp_ajax_nopriv_* hooks — delete and data-list are admin-only operations.
+		// Remove nopriv hooks - delete and data-list are admin-only operations.
 		$this->loader->add_action( 'wp_ajax_cubcf7db_delete_record', $plugin_admin, 'cubcf7db_delete_record' );
 		$this->loader->add_action( 'wp_ajax_cubcf7db_cf7form_single_datalist', $plugin_admin, 'cubcf7db_cf7form_single_datalist' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'cubcf7db_add_menu_page' );

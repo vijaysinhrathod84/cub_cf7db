@@ -10,7 +10,9 @@
  * @package    Cub_cf7db
  * @subpackage Cub_cf7db/admin/partials
  */
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 // Start output buffering to prevent headers already sent issue.
 ob_start();
 

@@ -208,11 +208,11 @@
 		$.ajax({
 			url: ajax_object.ajax_url,
 			type: 'POST',
-				data: {
-					action: 'cubcf7db_delete_record', // Define your server-side delete action.
-					form_id: formId,
-					nonce: ajax_object.nonce  // Fix #9: Send nonce for AJAX security verification.
-				},
+			data: {
+				action: 'cubcf7db_delete_record',
+				form_id: formId,
+				nonce: ajax_object.nonce
+			},
 			success: function (response) {
 				if (response.success) {
 					showToast(response.data.message, 'danger');
@@ -261,7 +261,8 @@
 	var defaultId = $( '#cf7form_list_dropdown' ).val();
 	fetchData( defaultId );
 
-	function showToast(message, type = 'info') {
+	function showToast( message, type ) {
+		type = type || 'info'; // IE-safe default parameter fallback.
 		var toastElement = $('<div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="5000"></div>');
 		toastElement.addClass('bg-' + type); // Bootstrap background color class.
 		toastElement.text(message);

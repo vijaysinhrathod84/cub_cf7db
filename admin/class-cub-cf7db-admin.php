@@ -19,7 +19,9 @@
  * @subpackage Cub_cf7db/admin
  * @author     cubsys <contact@cubsys.com>
  */
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 class Cub_Cf7db_Admin {
 
@@ -101,7 +103,7 @@ class Cub_Cf7db_Admin {
 			wp_enqueue_script( $this->plugin_name . '-select2-min', CUB_CF7DB_PLUGIN_URL . '/admin/js/select2.min.js', array( 'jquery' ), $this->version, true );
 			wp_enqueue_script( $this->plugin_name . '-admin', CUB_CF7DB_PLUGIN_URL . '/admin/js/cub_cf7db-admin.js', array( 'jquery', $this->plugin_name . '-select2-min', $this->plugin_name . '-dataTables-min' ), $this->version, true );
 
-			// Fix #8: Pass nonce to JS for AJAX security verification.
+			// Pass nonce to JS for AJAX security verification.
 			wp_localize_script(
 				$this->plugin_name . '-admin',
 				'ajax_object',
@@ -114,7 +116,7 @@ class Cub_Cf7db_Admin {
 	}
 
 	/**
-	 * Handle actions before sending mail — captures and saves CF7 form submission to DB.
+	 * Handle actions before sending mail - captures and saves CF7 form submission to DB.
 	 *
 	 * @since 1.0.0
 	 * @param object $form_tag CF7 contact form object.
@@ -153,11 +155,11 @@ class Cub_Cf7db_Admin {
 
 		$data  = $submission->get_posted_data();
 
-		// Fix #3: Use CF7's own uploaded_files() API instead of raw $_FILES superglobal.
+		// Use CF7's own uploaded_files() API instead of raw $_FILES superglobal.
 		$cf7_uploaded_files = $submission->uploaded_files();
 		$uploaded_file_keys = array_keys( $cf7_uploaded_files );
 
-		// Fix #4: Single, consolidated WP_Filesystem initialization (removed duplicate).
+		// Initialize WP_Filesystem for file operations.
 		if ( ! function_exists( 'WP_Filesystem' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 		}
@@ -171,7 +173,7 @@ class Cub_Cf7db_Admin {
 			$wp_filesystem->mkdir( $cub_cf7db_dirname );
 		}
 
-		// Fix #5: Single $uploaded_files declaration — no more reset bug.
+		// Initialize uploaded files tracker.
 		$uploaded_files = array();
 		$time_now       = current_time( 'YmdHis' );
 
@@ -239,7 +241,7 @@ class Cub_Cf7db_Admin {
 		do_action( 'cub_cf7db_before_save', $form_data );
 
 		$form_post_id = $form_tag->id();
-		$form_value   = serialize( $form_data );
+		$form_value   = maybe_serialize( $form_data );
 		$form_date    = current_time( 'Y-m-d H:i:s' );
 		$form_user_id = get_current_user_id();
 		$form_status  = 'pending';
@@ -312,12 +314,12 @@ class Cub_Cf7db_Admin {
 	}
 
 	/**
-	 * AJAX handler — Get form submissions list for a given CF7 form ID.
+	 * AJAX handler - Get form submissions list for a given CF7 form ID.
 	 *
 	 * @since 1.0.0
 	 */
 	public function cubcf7db_cf7form_single_datalist() {
-		// Fix #1: Verify nonce before processing any data.
+		// Verify nonce before processing any data.
 		check_ajax_referer( 'cubcf7db_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -330,13 +332,12 @@ class Cub_Cf7db_Admin {
 
 		global $wpdb;
 
-		// Fix #10: Use $cfdb consistently instead of mixing $wpdb and $cfdb.
 		$cfdb       = apply_filters( 'cub_cf7db_database', $wpdb );
 		$id         = absint( $_POST['id'] );
 		$table_name = esc_sql( $cfdb->prefix . 'cub_cf7db_forms' );
 
 		$results = $cfdb->get_results(
-			$cfdb->prepare( "SELECT form_id, form_post_id, form_value FROM {$table_name} WHERE form_post_id = %d", $id ),
+			$cfdb->prepare( "SELECT form_id, form_post_id, form_value FROM {$table_name} WHERE form_post_id = %d", $id ), // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 			ARRAY_A
 		);
 
@@ -418,8 +419,8 @@ class Cub_Cf7db_Admin {
 
 		if ( isset( $id ) && is_numeric( $id ) && $id > 0 ) {
 			$cfdb       = apply_filters( 'cub_cf7db_database', $wpdb );
-			$table_name = $cfdb->prefix . 'cub_cf7db_forms';
-			$query      = $cfdb->prepare( "SELECT * FROM $table_name WHERE form_id = %d", $id );
+			$table_name = esc_sql( $cfdb->prefix . 'cub_cf7db_forms' );
+			$query      = $cfdb->prepare( "SELECT * FROM {$table_name} WHERE form_id = %d", $id ); // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 			$result     = $cfdb->get_row( $query );
 		}
 
@@ -442,12 +443,12 @@ class Cub_Cf7db_Admin {
 	}
 
 	/**
-	 * AJAX handler — Delete a single CF7 form record.
+	 * AJAX handler - Delete a single CF7 form record.
 	 *
 	 * @since 1.0.0
 	 */
 	public function cubcf7db_delete_record() {
-		// Fix #1: Verify nonce before processing any data.
+		// Verify nonce before processing any data.
 		check_ajax_referer( 'cubcf7db_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -461,9 +462,9 @@ class Cub_Cf7db_Admin {
 		}
 
 		global $wpdb;
-		$table_name = $wpdb->prefix . 'cub_cf7db_forms';
+		$table_name = esc_sql( $wpdb->prefix . 'cub_cf7db_forms' );
 
-		$deleted = $wpdb->query( $wpdb->prepare( "DELETE FROM $table_name WHERE form_id = %d", $id ) );
+		$deleted = $wpdb->query( $wpdb->prepare( "DELETE FROM {$table_name} WHERE form_id = %d", $id ) ); // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
 		if ( false !== $deleted ) {
 			wp_send_json_success( array( 'message' => 'Record deleted successfully.' ) );

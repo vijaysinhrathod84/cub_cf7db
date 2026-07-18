@@ -18,7 +18,9 @@
  * @package    Cub_cf7db
  * @subpackage Cub_cf7db/includes
  */
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 class Cub_Cf7db_Activator {
 
 	/**
