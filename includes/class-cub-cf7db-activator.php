@@ -62,6 +62,11 @@ class Cub_Cf7db_Activator {
 		if ( $role ) {
 			$role->add_cap( 'cub_cf7db_access' );
 		}
+
+		// Schedule cron job for data retention cleanup.
+		if ( ! wp_next_scheduled( 'cubcf7db_daily_cleanup' ) ) {
+			wp_schedule_event( time(), 'daily', 'cubcf7db_daily_cleanup' );
+		}
 	}
 
 	/**

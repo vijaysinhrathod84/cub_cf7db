@@ -117,11 +117,18 @@ class Cub_Cf7db {
 
 		// Remove nopriv hooks - delete and data-list are admin-only operations.
 		$this->loader->add_action( 'wp_ajax_cubcf7db_delete_record', $plugin_admin, 'cubcf7db_delete_record' );
+		$this->loader->add_action( 'wp_ajax_cubcf7db_bulk_delete_records', $plugin_admin, 'cubcf7db_bulk_delete_records' );
 		$this->loader->add_action( 'wp_ajax_cubcf7db_cf7form_single_datalist', $plugin_admin, 'cubcf7db_cf7form_single_datalist' );
+		$this->loader->add_action( 'admin_post_cubcf7db_export_all', $plugin_admin, 'cubcf7db_export_all' );
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'cubcf7db_register_settings' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'cubcf7db_add_menu_page' );
 		$this->loader->add_action( 'wpcf7_before_send_mail', $plugin_admin, 'cubcf7db_before_send_mail' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+		$this->loader->add_action( 'cubcf7db_daily_cleanup', $plugin_admin, 'cubcf7db_daily_cleanup_action' );
+		$this->loader->add_action( 'wp_dashboard_setup', $plugin_admin, 'cubcf7db_add_dashboard_widgets' );
+		$this->loader->add_filter( 'wp_privacy_personal_data_erasers', $plugin_admin, 'cubcf7db_register_privacy_erasers' );
+		$this->loader->add_action( 'wp_ajax_cubcf7db_save_note', $plugin_admin, 'cubcf7db_save_note' );
 	}
 
 	/**

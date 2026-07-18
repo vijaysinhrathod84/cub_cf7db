@@ -31,7 +31,13 @@ class Cub_Cf7db_Deactivator {
 	 *
 	 * @since 1.0.0
 	 */
-	public static function deactivate() {
+	public static function deactivate( $network_wide ) {
+		// Unschedule cron job.
+		$timestamp = wp_next_scheduled( 'cubcf7db_daily_cleanup' );
+		if ( $timestamp ) {
+			wp_unschedule_event( $timestamp, 'cubcf7db_daily_cleanup' );
+		}
+
 		if ( ! empty( $GLOBALS['wp_roles'] ) && is_a( $GLOBALS['wp_roles'], 'WP_Roles' ) ) {
 			global $wp_roles;
 

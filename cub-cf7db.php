@@ -14,7 +14,7 @@
  * Plugin Name:       CUB - CF7DB
  * Plugin URI:        https://www.cubsys.com
  * Description:       CUB - CF7DB is a powerful addon for Contact Form 7 that allows you to save all submitted form data directly to your WordPress database. This plugin provides an easy-to-use interface within the WordPress admin area to view, search, and export form entries, making it a valuable tool for managing and analyzing your form data.
- * Version:           1.0.2
+ * Version:           1.0.3
  * Author:            cubsys
  * Author URI:        https://www.cubsys.com/
  * License:           GPL-2.0+
@@ -28,7 +28,7 @@
  * Currently plugin version.
  * Start at version 1.0.0 and use SemVer - https://semver.org
  */
-define( 'CUB_CF7DB_VERSION', '1.0.2' );
+define( 'CUB_CF7DB_VERSION', '1.0.3' );
 
 // Define plugin basename.
 define( 'CUB_CF7DB_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );

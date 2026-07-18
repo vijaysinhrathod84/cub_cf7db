@@ -40,8 +40,10 @@
 
 	var table;
 
-	// Function to fetch and display data for a given ID.
 	function fetchData( selectedId ) {
+		var fromDate = $('#cf7form_filter_from').val();
+		var toDate   = $('#cf7form_filter_to').val();
+
 		$.ajax(
 			{
 				url: ajax_object.ajax_url,
@@ -49,13 +51,15 @@
 				data: {
 					action: 'cubcf7db_cf7form_single_datalist',
 					id: selectedId, // Pass selected ID.
+					from_date: fromDate,
+					to_date: toDate,
 					nonce: ajax_object.nonce  // Fix #9: Send nonce for AJAX security verification.
 				},
 				success: function (response) {
 					if ( response.success ) {
-						var columns 	 = response.data.columns.filter(
+						var columns = response.data.columns.filter(
 							function ( column ) {
-								return column !== 'cub_cf7db_status' && column !== 'form_id'; // Exclude the 'cub_cf7db_status' and 'form_id' columns.
+								return column !== 'cub_cf7db_status' && column !== 'form_id' && column !== 'form_status'; // Exclude columns.
 							}
 						);
 						var data         = response.data.data;
@@ -68,6 +72,18 @@
 									title: columnTitles[column] || column, // Use friendly name if exists, else use original name.
 									data: column
 								};
+							}
+						);
+
+						// Add checkbox column at the beginning for bulk delete.
+						columnDefs.unshift(
+							{
+								title: '<input type="checkbox" id="select-all">',
+								data: null,
+								defaultContent: '<input type="checkbox" class="row-checkbox">',
+								orderable: false,
+								searchable: false,
+								className: 'select-checkbox'
 							}
 						);
 
@@ -89,7 +105,8 @@
 										formattedRow[column] = row[column] || ''; // Default to empty string if key is not present.
 									}
 								);
-								formattedRow['form_id'] = row['form_id']; // Ensure form_id is included for internal use.
+								formattedRow['form_id']     = row['form_id']; // Ensure form_id is included for internal use.
+								formattedRow['form_status'] = row['form_status']; // Pass status for styling.
 								return formattedRow;
 							}
 						);
@@ -105,6 +122,7 @@
 
 						// Update the table headers.
 						var headerHtml = '<tr>';
+						headerHtml += '<th class="select-checkbox"><input type="checkbox" id="select-all"></th>';
 						columns.forEach(
 							function (column) {
 									headerHtml += '<th>' + (columnTitles[column] || column) + '</th>';
@@ -130,10 +148,53 @@
 										$( row ).find( '.view-btn' ).attr( 'data-id', data.form_id );
 										$( row ).find( '.delete-btn' ).attr( 'data-id', data.form_id );
 									}
+									// Style unread rows.
+									if ( data.form_status === 'unread' ) {
+										$( row ).css( 'font-weight', 'bold' );
+									}
 								},
 								layout: {
 									topStart: {
 										buttons: [
+											{
+												text: 'Bulk Delete',
+												className: 'btn btn-danger btn-bulk-delete',
+												action: function ( e, dt, node, config ) {
+													var selectedIds = [];
+													$('.row-checkbox:checked').each(function() {
+														var rowData = table.row( $(this).closest('tr') ).data();
+														if (rowData && rowData.form_id) {
+															selectedIds.push(rowData.form_id);
+														}
+													});
+													if (selectedIds.length === 0) {
+														showToast('Please select at least one record to delete.', 'warning');
+														return;
+													}
+													if (confirm('Are you sure you want to delete ' + selectedIds.length + ' records?')) {
+														$.ajax({
+															url: ajax_object.ajax_url,
+															type: 'POST',
+															data: {
+																action: 'cubcf7db_bulk_delete_records',
+																form_ids: selectedIds,
+																nonce: ajax_object.nonce
+															},
+															success: function (response) {
+																if (response.success) {
+																	showToast(response.data.message, 'success');
+																	fetchData( $('#cf7form_list_dropdown').val() );
+																} else {
+																	showToast(response.data.message, 'danger');
+																}
+															},
+															error: function() {
+																showToast('Error deleting records.', 'danger');
+															}
+														});
+													}
+												}
+											},
 											{
 												extend: 'csv',
 												title: 'Contact Forms 7 Data',
@@ -189,6 +250,12 @@
 									$('#cub_cf7db_popup_delete_button').data('row', $(this).closest('tr'));
 								}
 							);
+
+						// Handle select all checkbox.
+						$( '#cubcf7form_listtable thead' )
+							.on('change', '#select-all', function() {
+								$('.row-checkbox').prop('checked', this.checked);
+							});
 					} else {
 						displayNoDataMessage();
 					}
@@ -257,6 +324,14 @@
 			fetchData( selectedId );
 		}
 	);
+
+	// Bind click event to the filter button.
+	$( '#cf7form_filter_btn' ).on( 'click', function ( e ) {
+		e.preventDefault();
+		var selectedId = $( '#cf7form_list_dropdown' ).val();
+		fetchData( selectedId );
+	});
+
 	// Fetch data for the default dropdown value on page load.
 	var defaultId = $( '#cf7form_list_dropdown' ).val();
 	fetchData( defaultId );
@@ -273,4 +348,33 @@
 		var toast = new bootstrap.Toast(toastElement[0]);
 		toast.show();
 	}
+
+	// Handle Save Note button click.
+	$('#cubcf7db_save_note_btn').on('click', function(e) {
+		e.preventDefault();
+		var btn = $(this);
+		var formId = btn.data('id');
+		var note = $('#cubcf7db_admin_notes').val();
+
+		$.ajax({
+			url: ajax_object.ajax_url,
+			type: 'POST',
+			data: {
+				action: 'cubcf7db_save_note',
+				form_id: formId,
+				note: note,
+				nonce: ajax_object.nonce
+			},
+			success: function(response) {
+				if (response.success) {
+					$('#cubcf7db_note_status').fadeIn().delay(2000).fadeOut();
+				} else {
+					showToast('Error saving note.', 'danger');
+				}
+			},
+			error: function() {
+				showToast('Error saving note.', 'danger');
+			}
+		});
+	});
 })( jQuery );

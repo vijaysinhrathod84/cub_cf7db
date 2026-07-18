@@ -4,7 +4,7 @@ Donate link: https://rzp.io/l/WVmYWWWx
 Tags: contact form 7, form submissions, data export, form data management, CF7 extension,
 Requires at least: 5.0
 Tested up to: 6.6
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -67,6 +67,19 @@ There is no hard limit imposed by the plugin. However, storage limitations will 
 
 
 == Changelog ==
+
+= 1.0.3 =
+* Feature: Read/Unread Status badges for entries.
+* Feature: Bulk Delete capabilities in the list view.
+* Feature: File Download links directly in the entry detail page.
+* Feature: Date Range Filtering for submissions.
+* Feature: Export All Data button to download all forms at once.
+* Feature: Settings page to selectively choose which forms to track.
+* Feature: Admin Email Notification toggle for new database saves.
+* Feature: Data Retention cleanup using WP Cron to delete old submissions.
+* Feature: WordPress Dashboard Widget showing quick stats.
+* Feature: GDPR Privacy Data Eraser hook for email data deletion.
+* Feature: Admin Notes system for annotating individual submissions.
 
 = 1.0.2 =
 * Security: Added nonce verification to all AJAX handlers to prevent CSRF attacks.
