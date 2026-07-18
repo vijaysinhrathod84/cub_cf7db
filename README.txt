@@ -3,7 +3,7 @@ Contributors: vijaysinhrathod84, cubsys
 Donate link: https://rzp.io/l/WVmYWWWx
 Tags: contact form 7, form submissions, data export, form data management, CF7 extension,
 Requires at least: 5.0
-Tested up to: 6.6
+Tested up to: 6.9
 Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
