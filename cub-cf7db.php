@@ -14,7 +14,7 @@
  * Plugin Name:       CUB - CF7DB
  * Plugin URI:        https://www.cubsys.com
  * Description:       CUB - CF7DB is a powerful addon for Contact Form 7 that allows you to save all submitted form data directly to your WordPress database. This plugin provides an easy-to-use interface within the WordPress admin area to view, search, and export form entries, making it a valuable tool for managing and analyzing your form data.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Author:            cubsys
  * Author URI:        https://www.cubsys.com/
  * License:           GPL-2.0+
@@ -28,7 +28,7 @@
  * Currently plugin version.
  * Start at version 1.0.0 and use SemVer - https://semver.org
  */
-define( 'CUB_CF7DB_VERSION', '1.0.1' );
+define( 'CUB_CF7DB_VERSION', '1.0.2' );
 
 // Define plugin basename.
 define( 'CUB_CF7DB_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -75,29 +75,39 @@ require_once CUB_CF7DB_PLUGIN_DIR . '/includes/class-cub-cf7db.php';
  * @param array       $options Array of bulk item update data.
  */
 function cubcf7db_upgrade_function( $upgrader_object, $options ) {
-    global $wp_filesystem;
+	// Fix #13: Only run when THIS plugin is being updated — not on every plugin/theme update.
+	if (
+		! isset( $options['action'], $options['type'] ) ||
+		'update' !== $options['action'] ||
+		'plugin' !== $options['type']
+	) {
+		return;
+	}
 
-    // Initialize the WP_Filesystem.
-    if ( ! function_exists( 'WP_Filesystem' ) ) {
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-    }
+	if ( isset( $options['plugins'] ) && is_array( $options['plugins'] ) ) {
+		if ( ! in_array( CUB_CF7DB_PLUGIN_BASENAME, $options['plugins'], true ) ) {
+			return;
+		}
+	}
 
-    // Initialize the WP_Filesystem.
-    WP_Filesystem();
+	global $wp_filesystem;
 
-    $upload_dir = wp_upload_dir();
-    $cfdb7_dirname = $upload_dir['basedir'] . '/cub_cf7db_uploads';
+	if ( ! function_exists( 'WP_Filesystem' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+	}
+	WP_Filesystem();
 
-    // Create the directory if it doesn't exist.
-    if ( ! $wp_filesystem->is_dir( $cfdb7_dirname ) ) {
-        $wp_filesystem->mkdir( $cfdb7_dirname );
-    }
+	$upload_dir    = wp_upload_dir();
+	$cfdb7_dirname = $upload_dir['basedir'] . '/cub_cf7db_uploads';
 
-    // Create the index.php file if it doesn't exist.
-    if ( ! $wp_filesystem->exists( $cfdb7_dirname . '/index.php' ) ) {
-        $index_file_content = "<?php\n// Silence is golden.";
-        $wp_filesystem->put_contents( $cfdb7_dirname . '/index.php', $index_file_content, FS_CHMOD_FILE );
-    }
+	if ( ! $wp_filesystem->is_dir( $cfdb7_dirname ) ) {
+		$wp_filesystem->mkdir( $cfdb7_dirname );
+	}
+
+	if ( ! $wp_filesystem->exists( $cfdb7_dirname . '/index.php' ) ) {
+		$index_file_content = "<?php\n// Silence is golden.";
+		$wp_filesystem->put_contents( $cfdb7_dirname . '/index.php', $index_file_content, FS_CHMOD_FILE );
+	}
 }
 
 add_action( 'upgrader_process_complete', 'cubcf7db_upgrade_function', 10, 2 );

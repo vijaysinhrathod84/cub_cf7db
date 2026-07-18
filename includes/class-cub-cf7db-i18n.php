@@ -33,7 +33,7 @@ class Cub_Cf7db_I18n {
 	 */
 	public function load_plugin_textdomain() {
 		load_plugin_textdomain(
-			'cub_cf7db',
+			'cub-cf7db',
 			false,
 			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
 		);

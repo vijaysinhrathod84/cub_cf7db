@@ -61,8 +61,8 @@ font-style: normal;
 
 @font-face {
 font-family: 'proxima_novasemibold';
-src: url('../font/Mark\ Simonson\ -\ Proxima\ Nova\ Semibold-webfont.ttf') format('woff2'),
-url('../font/Mark\ Simonson\ -\ Proxima\ Nova\ Semibold-webfont.ttf') format('woff');
+/* Fix #16: .ttf file format corrected to 'truetype' (was incorrectly declared as woff2/woff). */
+src: url('../font/Mark\ Simonson\ -\ Proxima\ Nova\ Semibold-webfont.ttf') format('truetype');
 font-weight: normal;
 font-style: normal;
 }

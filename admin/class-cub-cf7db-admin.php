@@ -19,7 +19,8 @@
  * @subpackage Cub_cf7db/admin
  * @author     cubsys <contact@cubsys.com>
  */
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 class Cub_Cf7db_Admin {
 
 	/**
@@ -48,7 +49,6 @@ class Cub_Cf7db_Admin {
 	 * @param string $version The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
-
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
 	}
@@ -59,18 +59,6 @@ class Cub_Cf7db_Admin {
 	 * @since    1.0.0
 	 */
 	public function enqueue_styles() {
-
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in Cub_Cf7db_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The Cub_Cf7db_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
 		$screen = get_current_screen();
 		if ( $screen && 'toplevel_page_cub_cf7db-page' === $screen->id ) {
 			wp_enqueue_style( $this->plugin_name . '-bootstrap', CUB_CF7DB_PLUGIN_URL . '/admin/css/bootstrap.min.css', array(), $this->version, 'all' );
@@ -91,14 +79,6 @@ class Cub_Cf7db_Admin {
 	 * @since    1.0.0
 	 */
 	public function enqueue_scripts() {
-
-		/**
-		 * Enqueue scripts for the specific admin page.
-		 *
-		 * This function hooks into the 'admin_enqueue_scripts' action,
-		 * checks the current screen, and enqueues scripts only if the
-		 * screen matches the target admin page.
-		 */
 		$screen = get_current_screen();
 		if ( $screen && 'toplevel_page_cub_cf7db-page' === $screen->id ) {
 			wp_enqueue_script( 'jquery' );
@@ -120,26 +100,32 @@ class Cub_Cf7db_Admin {
 			wp_enqueue_script( $this->plugin_name . '-responsive-bootstrap4-min', CUB_CF7DB_PLUGIN_URL . '/admin/js/responsive.bootstrap4.min.js', array( 'jquery' ), $this->version, true );
 			wp_enqueue_script( $this->plugin_name . '-select2-min', CUB_CF7DB_PLUGIN_URL . '/admin/js/select2.min.js', array( 'jquery' ), $this->version, true );
 			wp_enqueue_script( $this->plugin_name . '-admin', CUB_CF7DB_PLUGIN_URL . '/admin/js/cub_cf7db-admin.js', array( 'jquery', $this->plugin_name . '-select2-min', $this->plugin_name . '-dataTables-min' ), $this->version, true );
-			wp_localize_script( $this->plugin_name . '-admin', 'ajax_object', array( 'ajax_url' => admin_url( 'admin-ajax.php' ) ) );
+
+			// Fix #8: Pass nonce to JS for AJAX security verification.
+			wp_localize_script(
+				$this->plugin_name . '-admin',
+				'ajax_object',
+				array(
+					'ajax_url' => admin_url( 'admin-ajax.php' ),
+					'nonce'    => wp_create_nonce( 'cubcf7db_nonce' ),
+				)
+			);
 		}
 	}
 
 	/**
-	 * Handle actions before sending mail.
+	 * Handle actions before sending mail — captures and saves CF7 form submission to DB.
 	 *
 	 * @since 1.0.0
-	 * @param array $form_tag get a form data.
+	 * @param object $form_tag CF7 contact form object.
 	 */
 	public function cubcf7db_before_send_mail( $form_tag ) {
-		global $wpdb, $wp_filesystem;
+		global $wpdb;
 
-		$cfdb              = apply_filters( 'cub_cf7db_database', $wpdb );
-		$table_name        = $cfdb->prefix . 'cub_cf7db_forms';
-		$upload_dir        = wp_upload_dir();
-		$cub_cf7db_dirname = $upload_dir['basedir'] . '/cub_cf7db_uploads';
-		$bytes             = random_bytes( 5 );
-		$time_now          = time() . bin2hex( $bytes );
-		$submission        = WPCF7_Submission::get_instance();
+		$cfdb       = apply_filters( 'cub_cf7db_database', $wpdb );
+		$table_name = $cfdb->prefix . 'cub_cf7db_forms';
+
+		$submission = WPCF7_Submission::get_instance();
 		if ( ! $submission ) {
 			return;
 		}
@@ -147,10 +133,10 @@ class Cub_Cf7db_Admin {
 		$contact_form = $submission->get_contact_form();
 		$tags_names   = array();
 		$strict_keys  = apply_filters( 'cub_cf7db_strict_keys', false );
-
 		$allowed_tags = array();
-		$bl           = array( '\"', "\'", '/', '\\', '"', "'" );
-		$wl           = array( '&quot;', '&#039;', '&#047;', '&#092;', '&quot;', '&#039;' );
+
+		$bl = array( '\"', "\'", '/', '\\', '"', "'" );
+		$wl = array( '&quot;', '&#039;', '&#047;', '&#092;', '&quot;', '&#039;' );
 
 		if ( $strict_keys ) {
 			$tags = $contact_form->scan_form_tags();
@@ -165,116 +151,99 @@ class Cub_Cf7db_Admin {
 		$not_allowed_tags = apply_filters( 'cub_cf7db_not_allowed_tags', array( 'g-recaptcha-response' ) );
 		$allowed_tags     = apply_filters( 'cub_cf7db_allowed_tags', $allowed_tags );
 
-		$data           = $submission->get_posted_data();
-		$files          = $submission->uploaded_files();
-		$uploaded_files = array();
+		$data  = $submission->get_posted_data();
 
-		// Include and initialize the WP_Filesystem
-	if (!function_exists('WP_Filesystem')) {
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-	}
+		// Fix #3: Use CF7's own uploaded_files() API instead of raw $_FILES superglobal.
+		$cf7_uploaded_files = $submission->uploaded_files();
+		$uploaded_file_keys = array_keys( $cf7_uploaded_files );
 
-	WP_Filesystem();
-
-	global $wp_filesystem;
-
-	// Ensure the upload directory exists
-	$upload_dir = wp_upload_dir();
-	$cub_cf7db_dirname = $upload_dir['basedir'] . '/cub_cf7db_uploads';
-	if (!$wp_filesystem->is_dir($cub_cf7db_dirname)) {
-		$wp_filesystem->mkdir($cub_cf7db_dirname);
-	}
-
-	$uploaded_files = [];
-	$time_now = current_time('YmdHis'); // Generate a timestamp for file uniqueness
-
-	// Ensure the $files variable contains the files to process
-	$files = $_FILES;
-
-	if (isset($files)) {
-		foreach ($files as $file_key => $file) {
-			array_push($uploaded_files, $file_key);
+		// Fix #4: Single, consolidated WP_Filesystem initialization (removed duplicate).
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
 		}
-	}
+		WP_Filesystem();
+		global $wp_filesystem;
 
-	foreach ($files as $file_key => $file) {
-		// Handle both single and multiple file uploads
-		if (is_array($file['tmp_name'])) {
-			foreach ($file['tmp_name'] as $index => $tmp_name) {
-				if (empty($tmp_name)) {
-					continue;
-				}
-				// Ensure $file_name is a string
-				$file_name = wp_basename($file['name'][$index]);
-				$safe_file_name = sanitize_file_name($file_key . '-' . $file_name);
-				$upload_path = $cub_cf7db_dirname . '/' . $time_now . '-' . $safe_file_name;
+		// Ensure the upload directory exists.
+		$upload_dir        = wp_upload_dir();
+		$cub_cf7db_dirname = $upload_dir['basedir'] . '/cub_cf7db_uploads';
+		if ( ! $wp_filesystem->is_dir( $cub_cf7db_dirname ) ) {
+			$wp_filesystem->mkdir( $cub_cf7db_dirname );
+		}
 
-				// Use WP_Filesystem to move the uploaded file
-				if ($wp_filesystem->move($tmp_name, $upload_path, true)) {
-					$uploaded_files[] = $upload_path;
-				}
-			}
-		} else {
-			if (empty($file['tmp_name'])) {
+		// Fix #5: Single $uploaded_files declaration — no more reset bug.
+		$uploaded_files = array();
+		$time_now       = current_time( 'YmdHis' );
+
+		// Process uploaded files using CF7's API.
+		foreach ( $cf7_uploaded_files as $file_key => $file_path ) {
+			if ( empty( $file_path ) ) {
 				continue;
 			}
-			// Ensure $file_name is a string
-			$file_name = wp_basename($file['name']);
-			$safe_file_name = sanitize_file_name($file_key . '-' . $file_name);
-			$upload_path = $cub_cf7db_dirname . '/' . $time_now . '-' . $safe_file_name;
 
-			// Use WP_Filesystem to move the uploaded file
-			if ($wp_filesystem->move($file['tmp_name'], $upload_path, true)) {
-				$uploaded_files[] = $upload_path;
+			// Handle both single file (string) and multiple files (array).
+			$paths = is_array( $file_path ) ? $file_path : array( $file_path );
+			foreach ( $paths as $tmp_path ) {
+				if ( empty( $tmp_path ) ) {
+					continue;
+				}
+				$file_name      = wp_basename( $tmp_path );
+				$safe_file_name = sanitize_file_name( $file_key . '-' . $file_name );
+				$upload_path    = $cub_cf7db_dirname . '/' . $time_now . '-' . $safe_file_name;
+
+				if ( $wp_filesystem->move( $tmp_path, $upload_path, true ) ) {
+					$uploaded_files[ $file_key ] = $upload_path;
+				}
 			}
 		}
-	}
 
-	$form_data = array();
-	$form_data['cub_cf7db_status'] = 'unread';
+		$form_data                    = array();
+		$form_data['cub_cf7db_status'] = 'unread';
 
-	foreach ($data as $key => $d) {
-		// Skip processing if strict keys are enabled and $key is not in $allowed_tags
-		if ($strict_keys && !in_array($key, $allowed_tags, true)) {
-			continue;
-		}
-
-		// Skip processing if $key is in $not_allowed_tags or already in $uploaded_files
-		if (!in_array($key, $not_allowed_tags, true) && !in_array($key, $uploaded_files, true)) {
-			// Process $d based on whether it's an array or not
-			$tmp_d = is_array($d) ? array_map(function ($item) use ($bl, $wl) {
-				return str_replace($bl, $wl, $item);
-			}, $d) : str_replace($bl, $wl, $d);
-
-			// Sanitize $key and store processed data in $form_data
-			$key = sanitize_text_field($key);
-			$form_data[$key] = $tmp_d;
-		}
-
-		// Process uploaded files and add file names to $form_data with a specific key
-		if (in_array($key, $uploaded_files, true)) {
-			// Check if the file has been successfully moved before adding it to $form_data
-			if (isset($files[$key]) && !empty($files[$key]['name']) && in_array($cub_cf7db_dirname . '/' . $time_now . '-' . sanitize_file_name($file_key . '-' . wp_basename($files[$key]['name'])), $uploaded_files)) {
-				$file_name = basename($files[$key]['name']);
-				$key = sanitize_text_field($key);
-
-				$form_data[$key . 'cub_cf7db_file'] = $file_name;
+		foreach ( $data as $key => $d ) {
+			// Skip if strict keys enabled and key not in allowed list.
+			if ( $strict_keys && ! in_array( $key, $allowed_tags, true ) ) {
+				continue;
 			}
+
+			// Skip not-allowed tags (e.g. recaptcha).
+			if ( in_array( $key, $not_allowed_tags, true ) ) {
+				continue;
+			}
+
+			// Store uploaded file reference.
+			if ( isset( $uploaded_files[ $key ] ) ) {
+				$sanitized_key                          = sanitize_text_field( $key );
+				$form_data[ $sanitized_key . 'cub_cf7db_file' ] = wp_basename( $uploaded_files[ $key ] );
+				continue;
+			}
+
+			// Skip raw file keys from CF7 uploaded list.
+			if ( in_array( $key, $uploaded_file_keys, true ) ) {
+				continue;
+			}
+
+			// Sanitize and escape the posted value.
+			$tmp_d = is_array( $d )
+				? array_map( function( $item ) use ( $bl, $wl ) {
+					return str_replace( $bl, $wl, $item );
+				}, $d )
+				: str_replace( $bl, $wl, $d );
+
+			$sanitized_key             = sanitize_text_field( $key );
+			$form_data[ $sanitized_key ] = $tmp_d;
 		}
-	}		
 
 		/* cub_cf7db before save data. */
 		$form_data = apply_filters( 'cub_cf7db_before_save_data', $form_data );
-
 		do_action( 'cub_cf7db_before_save', $form_data );
 
 		$form_post_id = $form_tag->id();
 		$form_value   = serialize( $form_data );
 		$form_date    = current_time( 'Y-m-d H:i:s' );
 		$form_user_id = get_current_user_id();
-		$form_status  = 'pending'; // Set the default status to 'pending'.
+		$form_status  = 'pending';
 
-		// Insert data using Cub_cf7db extension.
 		$cfdb->insert(
 			$table_name,
 			array(
@@ -284,13 +253,7 @@ class Cub_Cf7db_Admin {
 				'form_user_id' => $form_user_id,
 				'form_status'  => $form_status,
 			),
-			array(
-				'%d',
-				'%s',
-				'%s',
-				'%d',
-				'%s',
-			)
+			array( '%d', '%s', '%s', '%d', '%s' )
 		);
 
 		/* cub_cf7db after save data */
@@ -299,33 +262,32 @@ class Cub_Cf7db_Admin {
 	}
 
 	/**
-     * Add the CF7DB menu page to the admin menu.
-     *
-     * @since 1.0.0
-     */
-    public function cubcf7db_add_menu_page() {
-        add_menu_page(
-            __( 'CF7DB', 'cub-cf7db' ),
-            __( 'CF7DB', 'cub-cf7db' ),
-            'manage_options',
-            'cub_cf7db-page',
-            array( $this, 'cubcf7db_menu_callback' ),
-            'dashicons-feedback',
-            30
-        );
-    }
-
+	 * Add the CF7DB menu page to the admin menu.
+	 *
+	 * @since 1.0.0
+	 */
+	public function cubcf7db_add_menu_page() {
+		add_menu_page(
+			__( 'CF7DB', 'cub-cf7db' ),
+			__( 'CF7DB', 'cub-cf7db' ),
+			'manage_options',
+			'cub_cf7db-page',
+			array( $this, 'cubcf7db_menu_callback' ),
+			'dashicons-feedback',
+			30
+		);
+	}
 
 	/**
-     * Render the CF7DB menu page.
-     *
-     * @since 1.0.0
-     */
-    public function cubcf7db_menu_callback() {
-        if ( current_user_can( 'manage_options' ) ) {
-            include_once 'partials/cub-cf7db-display.php';
-        }
-    }
+	 * Render the CF7DB menu page.
+	 *
+	 * @since 1.0.0
+	 */
+	public function cubcf7db_menu_callback() {
+		if ( current_user_can( 'manage_options' ) ) {
+			include_once 'partials/cub-cf7db-display.php';
+		}
+	}
 
 	/**
 	 * Get a list of all Contact Form 7 forms for use in a dropdown.
@@ -345,163 +307,155 @@ class Cub_Cf7db_Admin {
 			'order'          => 'ASC',
 			'posts_per_page' => -1,
 		);
-		$cf7_forms_data = get_posts( $args );
 
-		return $cf7_forms_data;
+		return get_posts( $args );
 	}
 
 	/**
-	 * Get a single Contact Form 7 forms Details.
+	 * AJAX handler — Get form submissions list for a given CF7 form ID.
 	 *
 	 * @since 1.0.0
 	 */
 	public function cubcf7db_cf7form_single_datalist() {
-		if ( isset( $_POST['id'] ) ) {
-			global $wpdb;
-			$cfdb       = apply_filters( 'cub_cf7db_database', $wpdb );
-			$id         = sanitize_text_field( wp_unslash( $_POST['id'] ) );
-			$table_name = $cfdb->prefix . 'cub_cf7db_forms';
-			$table_name = esc_sql( $table_name );
+		// Fix #1: Verify nonce before processing any data.
+		check_ajax_referer( 'cubcf7db_nonce', 'nonce' );
 
-			// Execute the prepared query and retrieve results as an associative array.
-			$results = $wpdb->get_results( $wpdb->prepare( "SELECT form_id, form_post_id, form_value FROM {$table_name} WHERE form_post_id = %d", $id ), ARRAY_A );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Insufficient permissions.' );
+		}
 
-			if ( ! empty( $results ) ) {
-				$formatted_results = array();
-				$columns           = array();
-				$column_titles     = array();
-
-				foreach ( $results as $result ) {
-					if ( isset( $result['form_value'] ) ) {
-						$form_values = maybe_unserialize( $result['form_value'] );
-						if ( is_array( $form_values ) ) {
-							$formatted_result = array();
-							foreach ( $form_values as $key => $value ) {
-								if ( 'cub_cf7db_status' !== $key ) { // Exclude the 'cub_cf7db_status' column.
-									$formatted_result[ $key ] = $value;
-									if ( ! in_array( $key, $columns, true ) ) {
-										$columns[] = $key; // Add the column to $columns array if it's not already present.
-
-										$column_titles[ $key ] = self::cubcf7db_generate_user_friendly_column_title( $key );
-									}
-								}
-							}
-
-							// Add form_id to the formatted result.
-							$formatted_result['form_id'] = $result['form_id'];
-
-							$formatted_results[] = $formatted_result;
-						}
-					}
-				}
-
-				// Limit to the first 5 columns.
-				$columns       = array_slice( $columns, 0, 5 );
-				$column_titles = array_slice( $column_titles, 0, 5 );
-
-				// Ensure form_id is included in columns and titles.
-				if ( ! in_array( 'form_id', $columns, true ) ) {
-					$columns[]                = 'form_id';
-					$column_titles['form_id'] = 'Form ID';
-				}
-
-				// Remove any extra data from formatted_results.
-				$formatted_results = array_map(
-					function ( $row ) use ( $columns ) {
-						return array_intersect_key( $row, array_flip( $columns ) );
-					},
-					$formatted_results
-				);
-
-				wp_send_json_success(
-					array(
-						'columns'       => $columns,
-						'data'          => $formatted_results,
-						'column_titles' => $column_titles,
-					)
-				);
-			} else {
-				wp_send_json_error( 'No data found for the provided ID' );
-			}
-		} else {
+		if ( ! isset( $_POST['id'] ) ) {
 			wp_send_json_error( 'ID not provided' );
 		}
+
+		global $wpdb;
+
+		// Fix #10: Use $cfdb consistently instead of mixing $wpdb and $cfdb.
+		$cfdb       = apply_filters( 'cub_cf7db_database', $wpdb );
+		$id         = absint( $_POST['id'] );
+		$table_name = esc_sql( $cfdb->prefix . 'cub_cf7db_forms' );
+
+		$results = $cfdb->get_results(
+			$cfdb->prepare( "SELECT form_id, form_post_id, form_value FROM {$table_name} WHERE form_post_id = %d", $id ),
+			ARRAY_A
+		);
+
+		if ( empty( $results ) ) {
+			wp_send_json_error( 'No data found for the provided ID' );
+		}
+
+		$formatted_results = array();
+		$columns           = array();
+		$column_titles     = array();
+
+		foreach ( $results as $result ) {
+			if ( ! isset( $result['form_value'] ) ) {
+				continue;
+			}
+
+			$form_values = maybe_unserialize( $result['form_value'] );
+			if ( ! is_array( $form_values ) ) {
+				continue;
+			}
+
+			$formatted_result = array();
+			foreach ( $form_values as $key => $value ) {
+				if ( 'cub_cf7db_status' === $key ) {
+					continue;
+				}
+				$formatted_result[ $key ] = $value;
+				if ( ! in_array( $key, $columns, true ) ) {
+					$columns[]             = $key;
+					$column_titles[ $key ] = self::cubcf7db_generate_user_friendly_column_title( $key );
+				}
+			}
+
+			$formatted_result['form_id'] = $result['form_id'];
+			$formatted_results[]         = $formatted_result;
+		}
+
+		// Limit to the first 5 columns.
+		$columns       = array_slice( $columns, 0, 5 );
+		$column_titles = array_slice( $column_titles, 0, 5, true );
+
+		// Ensure form_id is included.
+		if ( ! in_array( 'form_id', $columns, true ) ) {
+			$columns[]                = 'form_id';
+			$column_titles['form_id'] = 'Form ID';
+		}
+
+		// Remove extra keys from formatted results.
+		$formatted_results = array_map(
+			function( $row ) use ( $columns ) {
+				return array_intersect_key( $row, array_flip( $columns ) );
+			},
+			$formatted_results
+		);
+
+		wp_send_json_success(
+			array(
+				'columns'       => $columns,
+				'data'          => $formatted_results,
+				'column_titles' => $column_titles,
+			)
+		);
 	}
 
 	/**
-	 * Get a single Contact Form 7 form's single record.
+	 * Get a single Contact Form 7 form record detail.
 	 *
 	 * @since 1.0.0
-	 *
 	 * @param int $id The ID of the form record to retrieve.
-	 * @return object|null The form record object or null if not found or unauthorized.
+	 * @return object|null The form record or null if not found or unauthorized.
 	 */
 	public function cubcf7db_cf7form_single_recorddetail( $id ) {
-		// Check if the current user has the necessary capability.
 		if ( ! current_user_can( 'manage_options' ) ) {
-			return null; // Return null if user is not authorized.
+			return null;
 		}
 
 		global $wpdb;
 		$result = null;
 
-		// Validate $id as a positive integer.
 		if ( isset( $id ) && is_numeric( $id ) && $id > 0 ) {
 			$cfdb       = apply_filters( 'cub_cf7db_database', $wpdb );
 			$table_name = $cfdb->prefix . 'cub_cf7db_forms';
-
-			// Prepare and execute the SQL query.
-			$query  = $cfdb->prepare( "SELECT * FROM $table_name WHERE form_id = %d", $id );
-			$result = $cfdb->get_row( $query ); // Fetch the result as a single object.
+			$query      = $cfdb->prepare( "SELECT * FROM $table_name WHERE form_id = %d", $id );
+			$result     = $cfdb->get_row( $query );
 		}
 
-		return $result; // Return the form record object or null if not found or invalid ID.
+		return $result;
 	}
-
 
 	/**
 	 * Generate a user-friendly column title from a column key.
 	 *
 	 * @since 1.0.0
-	 *
 	 * @param string $key The original column key.
 	 * @return string The user-friendly column title.
 	 */
-	public function cubcf7db_generate_user_friendly_column_title( $key ) {
-
-		// Remove specific substrings.
+	public static function cubcf7db_generate_user_friendly_column_title( $key ) {
 		$key_val = str_replace( array( 'your-', 'cfdb7_file' ), '', $key );
-
-		// Remove trailing numbers.
 		$key_val = preg_replace( '/\d+$/', '', $key_val );
-
-		// Remove all numbers.
 		$key_val = preg_replace( '/\d/', '', $key_val );
-
-		// Replace underscores and hyphens with spaces.
 		$key_val = str_replace( array( '_', '-' ), ' ', $key_val );
-
-		// Capitalize the result and trim any extra spaces.
-		$user_friendly_title = ucwords( trim( $key_val ) );
-
-		return $user_friendly_title;
+		return ucwords( trim( $key_val ) );
 	}
 
 	/**
-	 * Delete a single Contact Form 7 form record and redirect to the main page.
+	 * AJAX handler — Delete a single CF7 form record.
 	 *
 	 * @since 1.0.0
 	 */
 	public function cubcf7db_delete_record() {
-		// Check if the user has sufficient permissions.
+		// Fix #1: Verify nonce before processing any data.
+		check_ajax_referer( 'cubcf7db_nonce', 'nonce' );
+
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => 'You do not have sufficient permissions to delete this record.' ) );
 		}
 
-		// Get the ID from the AJAX request data.
 		$id = isset( $_POST['form_id'] ) ? absint( $_POST['form_id'] ) : 0;
 
-		// Validate the ID.
 		if ( ! $id ) {
 			wp_send_json_error( array( 'message' => 'Invalid record ID.' ) );
 		}
@@ -509,11 +463,9 @@ class Cub_Cf7db_Admin {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'cub_cf7db_forms';
 
-		// Execute the delete query.
 		$deleted = $wpdb->query( $wpdb->prepare( "DELETE FROM $table_name WHERE form_id = %d", $id ) );
 
 		if ( false !== $deleted ) {
-			// Redirect to the main page after successful deletion.
 			wp_send_json_success( array( 'message' => 'Record deleted successfully.' ) );
 		} else {
 			wp_send_json_error( array( 'message' => 'Error deleting record.' ) );

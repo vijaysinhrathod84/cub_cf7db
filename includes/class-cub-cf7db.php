@@ -12,7 +12,7 @@
  * @subpackage Cub_cf7db/includes
  */
 
- if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /**
  * The core plugin class.
@@ -68,7 +68,8 @@ class Cub_Cf7db {
 	 * @since    1.0.0
 	 */
 	public function __construct() {
-		$this->version = defined( 'CUB_CF7DB_VERSION' ) ? CUB_CF7DB_VERSION : '1.0.0';
+		// Fix #18: CUB_CF7DB_VERSION is always defined before this class loads — simplified.
+		$this->version     = CUB_CF7DB_VERSION;
 		$this->plugin_name = 'cub_cf7db';
 
 		$this->load_dependencies();
@@ -79,16 +80,6 @@ class Cub_Cf7db {
 
 	/**
 	 * Load the required dependencies for this plugin.
-	 *
-	 * Include the following files that make up the plugin:
-	 *
-	 * - Cub_Cf7db_Loader. Orchestrates the hooks of the plugin.
-	 * - Cub_Cf7db_I18n. Defines internationalization functionality.
-	 * - Cub_Cf7db_Admin. Defines all hooks for the admin area.
-	 * - Cub_Cf7db_Public. Defines all hooks for the public side of the site.
-	 *
-	 * Create an instance of the loader which will be used to register the hooks
-	 * with WordPress.
 	 *
 	 * @since    1.0.0
 	 * @access   private
@@ -105,9 +96,6 @@ class Cub_Cf7db {
 	/**
 	 * Define the locale for this plugin for internationalization.
 	 *
-	 * Uses the Cub_Cf7db_I18n class in order to set the domain and to register the hook
-	 * with WordPress.
-	 *
 	 * @since    1.0.0
 	 * @access   private
 	 */
@@ -117,8 +105,7 @@ class Cub_Cf7db {
 	}
 
 	/**
-	 * Register all of the hooks related to the admin area functionality
-	 * of the plugin.
+	 * Register all of the hooks related to the admin area functionality.
 	 *
 	 * @since    1.0.0
 	 * @access   private
@@ -126,10 +113,9 @@ class Cub_Cf7db {
 	private function define_admin_hooks() {
 		$plugin_admin = new Cub_Cf7db_Admin( $this->get_plugin_name(), $this->get_version() );
 
+		// Fix #2: Removed wp_ajax_nopriv_* hooks — delete and data-list are admin-only operations.
 		$this->loader->add_action( 'wp_ajax_cubcf7db_delete_record', $plugin_admin, 'cubcf7db_delete_record' );
-		$this->loader->add_action( 'wp_ajax_nopriv_cubcf7db_delete_record', $plugin_admin, 'cubcf7db_delete_record' );
 		$this->loader->add_action( 'wp_ajax_cubcf7db_cf7form_single_datalist', $plugin_admin, 'cubcf7db_cf7form_single_datalist' );
-		$this->loader->add_action( 'wp_ajax_nopriv_cubcf7db_cf7form_single_datalist', $plugin_admin, 'cubcf7db_cf7form_single_datalist' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'cubcf7db_add_menu_page' );
 		$this->loader->add_action( 'wpcf7_before_send_mail', $plugin_admin, 'cubcf7db_before_send_mail' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
@@ -137,8 +123,7 @@ class Cub_Cf7db {
 	}
 
 	/**
-	 * Register all of the hooks related to the public-facing functionality
-	 * of the plugin.
+	 * Register all of the hooks related to the public-facing functionality.
 	 *
 	 * @since    1.0.0
 	 * @access   private
@@ -160,8 +145,7 @@ class Cub_Cf7db {
 	}
 
 	/**
-	 * The name of the plugin used to uniquely identify it within the context of
-	 * WordPress and to define internationalization functionality.
+	 * The name of the plugin used to uniquely identify it within the context of WordPress.
 	 *
 	 * @since     1.0.0
 	 * @return    string    The name of the plugin.

@@ -14,10 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // Start output buffering to prevent headers already sent issue.
 ob_start();
 
-$cub_cf7db       = new Cub_Cf7db();
-$pluginname      = $cub_cf7db->get_plugin_name();
-$pluginversion   = $cub_cf7db->get_version();
-$cub_cf7db_admin = new Cub_Cf7db_Admin( $pluginname, $pluginversion );
+// Fix #17: Instantiate admin class directly — avoids re-running all plugin hooks via new Cub_Cf7db().
+$cub_cf7db_admin = new Cub_Cf7db_Admin( 'cub_cf7db', CUB_CF7DB_VERSION );
 $action_param    = isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : null;
 $formid          = isset( $_GET['formid'] ) ? absint( $_GET['formid'] ) : null;
 

@@ -4,7 +4,7 @@ Donate link: https://rzp.io/l/WVmYWWWx
 Tags: contact form 7, form submissions, data export, form data management, CF7 extension,
 Requires at least: 5.0
 Tested up to: 6.6
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,7 +68,25 @@ There is no hard limit imposed by the plugin. However, storage limitations will 
 
 == Changelog ==
 
-= 1.0.0 =
+= 1.0.2 =
+* Security: Added nonce verification to all AJAX handlers to prevent CSRF attacks.
+* Security: Removed `nopriv` AJAX hooks — delete and data-fetch are admin-only operations.
+* Bug fix: Fixed file upload handling to use CF7's submission API instead of raw `$_FILES`.
+* Bug fix: Fixed duplicate `global $wp_filesystem` scope issue in form submission handler.
+* Bug fix: Fixed `$uploaded_files` array being reset causing data loss.
+* Bug fix: Fixed uninstall dropping wrong table (`cub_cf7db_entries` → `cub_cf7db_forms`).
+* Bug fix: Fixed `DROP TABLE` SQL using `esc_sql()` instead of broken `prepare()` usage.
+* Bug fix: Fixed text domain mismatch (`cub_cf7db` → `cub-cf7db`).
+* Bug fix: Fixed upgrader hook running on every plugin/theme update instead of only this plugin.
+* Bug fix: Fixed incorrect `@font-face` format declaration for Semibold font (ttf→truetype).
+* Improvement: Added nonce to `wp_localize_script` and all JavaScript AJAX requests.
+* Improvement: Fixed `$cfdb`/`$wpdb` inconsistency in data list AJAX handler.
+* Improvement: Removed unnecessary public CSS/JS enqueue on front-end pages.
+* Improvement: Removed redundant `new Cub_Cf7db()` instance inside admin display partial.
+* Improvement: Removed `console.log()` debug statement from production JavaScript.
+* Improvement: Fixed typo in Select2 placeholder: "Contect" → "Contact".
+
+= 1.0.1 =
 * Initial release of CUB - CF7DB.
 
 == Upgrade Notice ==

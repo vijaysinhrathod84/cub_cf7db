@@ -33,7 +33,7 @@
 	jQuery( '#cf7form_list_dropdown' )
 	.select2(
 		{
-			placeholder: 'Select Contect Form 7',
+			placeholder: 'Select Contact Form 7',
 			width: "100%"
 		}
 	);
@@ -48,7 +48,8 @@
 				type: 'POST',
 				data: {
 					action: 'cubcf7db_cf7form_single_datalist',
-					id: selectedId // Pass selected ID.
+					id: selectedId, // Pass selected ID.
+					nonce: ajax_object.nonce  // Fix #9: Send nonce for AJAX security verification.
 				},
 				success: function (response) {
 					if ( response.success ) {
@@ -124,7 +125,6 @@
 									selector: 'td:nth-child(2)'
 								},
 								createdRow: function (row, data, dataIndex) {
-									console.log(formattedData);
 									// Ensure form_id is available in data.
 									if ( data.form_id !== undefined ) {
 										$( row ).find( '.view-btn' ).attr( 'data-id', data.form_id );
@@ -208,10 +208,11 @@
 		$.ajax({
 			url: ajax_object.ajax_url,
 			type: 'POST',
-			data: {
-				action: 'cubcf7db_delete_record', // Define your server-side delete action.
-				form_id: formId
-			},
+				data: {
+					action: 'cubcf7db_delete_record', // Define your server-side delete action.
+					form_id: formId,
+					nonce: ajax_object.nonce  // Fix #9: Send nonce for AJAX security verification.
+				},
 			success: function (response) {
 				if (response.success) {
 					showToast(response.data.message, 'danger');
