@@ -32,7 +32,7 @@ class Cub_Cf7db_Activator {
 	public static function activate( $network_wide ) {
 		if ( ! class_exists( 'WPCF7_ContactForm' ) ) {
 			self::show_admin_notice();
-			deactivate_plugins( plugin_basename( __FILE__ ) );
+			deactivate_plugins( CUB_CF7DB_PLUGIN_BASENAME );
 			return;
 		}
 
