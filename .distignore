@@ -1,0 +1,23 @@
+# Files & folders to exclude from WordPress.org SVN deployment
+/.git
+/.github
+/.gitignore
+/.gitattributes
+
+# Dev tools & config
+/node_modules
+/tests
+/bin
+/composer.json
+/composer.lock
+/package.json
+/package-lock.json
+/webpack.config.js
+/phpunit.xml
+/phpunit.xml.dist
+/.phpcs.xml
+/.phpcs.xml.dist
+
+# Docs not needed on WP.org
+/README.md
+.distignore
